@@ -1,0 +1,504 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>AMI Career Galaxy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one infinite starfield canvas; topics are circular "planets" orbiting an AMI sun; a camera flies, zooms and rotates between them (Prezi-style). */
+:root{
+  color-scheme: dark;
+  --space:#05061a;
+  --space-2:#0c0f2e;
+  --ink:#ECEEFF;
+  --muted:#A3AAD8;
+  --dim:#6B72A6;
+  --gold:#F7C873;      /* education */
+  --cyan:#7AD7FF;      /* industry & global */
+  --violet:#B9A2FF;    /* toolkit & roadmap */
+  --line:rgba(185,162,255,.22);
+  --f-display:"Unbounded", "Arial Black", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+html,body{height:100%;}
+body{
+  margin:0; overflow:hidden; background:var(--space); color:var(--ink);
+  font-family:var(--f-body);
+  -webkit-font-smoothing:antialiased;
+}
+#stars{position:fixed; inset:0; width:100%; height:100%; display:block;
+  background:
+    radial-gradient(60% 50% at 20% 25%, rgba(120,90,255,.16), transparent 70%),
+    radial-gradient(50% 45% at 85% 80%, rgba(247,200,115,.10), transparent 70%),
+    radial-gradient(40% 40% at 70% 15%, rgba(122,215,255,.10), transparent 70%),
+    var(--space);
+}
+#viewport{position:fixed; inset:0; overflow:hidden; cursor:default; touch-action:none;}
+#world{position:absolute; left:0; top:0; transform-origin:0 0;}
+
+.orbits{position:absolute; left:-6000px; top:-6000px; width:12000px; height:12000px; overflow:visible; pointer-events:none;}
+.orbits circle{fill:none; stroke:var(--line); stroke-width:6; stroke-dasharray:4 28; stroke-linecap:round;}
+.orbits .edu{stroke:rgba(247,200,115,.28);}
+
+.formula{position:absolute; font-family:var(--f-mono); color:rgba(185,162,255,.16); white-space:nowrap; pointer-events:none; user-select:none;}
+
+/* Planet frames: base 1000x1000, scaled per planet with --k */
+.planet{
+  position:absolute; width:1000px; height:1000px; margin:-500px 0 0 -500px;
+  border-radius:50%;
+  transform: rotate(var(--r,0deg)) scale(var(--k,1));
+  --c: var(--violet);
+  background:
+    radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--c) 26%, transparent), transparent 55%),
+    radial-gradient(circle at 50% 50%, #0d1033 0%, #080a24 62%, #060719 100%);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--c) 55%, transparent),
+    0 0 90px 10px color-mix(in srgb, var(--c) 28%, transparent),
+    inset 0 0 120px color-mix(in srgb, var(--c) 18%, transparent);
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  cursor:pointer;
+}
+.planet .in{width:720px; display:flex; flex-direction:column; align-items:center; gap:26px;}
+.eyebrow{font-family:var(--f-mono); font-size:26px; letter-spacing:.18em; text-transform:uppercase; color:var(--c);}
+.planet h2{font-family:var(--f-display); font-weight:600; font-size:66px; line-height:1.08; margin:0; text-wrap:balance; letter-spacing:-.01em;}
+.planet p{font-size:33px; line-height:1.42; margin:0; color:var(--muted); text-wrap:pretty;}
+.planet p strong{color:var(--ink); font-weight:600;}
+.src{font-family:var(--f-mono); font-size:19px; color:var(--dim); letter-spacing:.02em; line-height:1.4;}
+
+.stats{display:flex; gap:34px; justify-content:center; flex-wrap:wrap;}
+.stat{display:flex; flex-direction:column; align-items:center; gap:4px; min-width:170px;}
+.stat b{font-family:var(--f-display); font-weight:600; font-size:60px; color:var(--c); font-variant-numeric:tabular-nums; letter-spacing:-.02em;}
+.stat span{font-size:23px; color:var(--muted); line-height:1.3; max-width:210px;}
+
+.chips{display:flex; flex-wrap:wrap; gap:14px; justify-content:center;}
+.chip{font-family:var(--f-mono); font-size:23px; padding:9px 20px; border-radius:999px; border:2px solid color-mix(in srgb, var(--c) 45%, transparent); color:var(--ink);}
+
+.trio{display:grid; grid-template-columns:repeat(3,1fr); gap:24px; width:100%;}
+.trio div{display:flex; flex-direction:column; gap:8px;}
+.trio .sym{font-family:var(--f-mono); font-size:52px; color:var(--c);}
+.trio b{font-family:var(--f-display); font-weight:600; font-size:30px;}
+.trio span{font-size:23px; color:var(--muted); line-height:1.35;}
+
+.steps{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:16px; text-align:left; width:640px;}
+.steps li{display:grid; grid-template-columns:64px 1fr; gap:18px; align-items:baseline;}
+.steps .n{font-family:var(--f-display); font-size:40px; color:var(--c);}
+.steps b{font-weight:600; font-size:30px; color:var(--ink);}
+.steps span{display:block; font-size:24px; color:var(--muted); line-height:1.35;}
+
+/* Sun */
+.sun{
+  --c:var(--gold);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,226,170,.16) 0%, rgba(247,200,115,.08) 38%, rgba(10,12,40,.92) 66%, #070822 100%);
+  box-shadow:
+    0 0 0 5px rgba(247,200,115,.55),
+    0 0 220px 40px rgba(247,200,115,.22),
+    inset 0 0 200px rgba(247,200,115,.18);
+}
+.sun .in{width:800px; gap:30px; transform:translateY(-60px);}
+.sun h1{font-family:var(--f-display); font-weight:700; font-size:104px; line-height:1; margin:0; letter-spacing:-.02em; text-wrap:balance;}
+.sun h1 em{font-style:normal; color:var(--gold);}
+.sun .sub{font-size:34px; color:var(--muted); line-height:1.4; max-width:680px;}
+.sun .by{font-family:var(--f-mono); font-size:22px; color:var(--dim); letter-spacing:.08em; text-transform:uppercase;}
+
+.core{--c:var(--gold);
+  background: radial-gradient(circle, rgba(255,236,196,.95) 0%, rgba(247,200,115,.9) 40%, rgba(170,110,30,.85) 100%);
+  box-shadow: 0 0 0 4px rgba(255,240,210,.8), 0 0 160px 50px rgba(247,200,115,.55);
+  color:#1b1306;
+}
+.core .in{width:760px; gap:30px;}
+.core h2{color:#1b1306; font-size:70px;}
+.core p{color:#3a2a0c; font-size:36px;}
+.core .eyebrow{color:#6a4710;}
+
+.edu{--c:var(--gold);}
+.edu h2{font-size:72px;}
+.moons-hint{display:flex; gap:22px; justify-content:center; flex-wrap:wrap;}
+.moons-hint span{font-family:var(--f-mono); font-size:24px; color:var(--gold); border-bottom:2px dashed rgba(247,200,115,.5); padding-bottom:4px;}
+
+/* UI chrome */
+.bar{
+  position:fixed; left:0; right:0; bottom:0; z-index:5;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  background:linear-gradient(to top, rgba(5,6,26,.92), rgba(5,6,26,0));
+  pointer-events:none;
+}
+.bar > *{pointer-events:auto;}
+.btn{
+  appearance:none; border:1px solid rgba(185,162,255,.35); background:rgba(12,15,46,.75);
+  color:var(--ink); font:500 13px/1 var(--f-mono); letter-spacing:.06em;
+  height:40px; min-width:40px; padding:0 14px; border-radius:20px; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+}
+.btn:hover{border-color:var(--gold); color:var(--gold);}
+.btn:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+.btn[aria-pressed="true"]{border-color:var(--gold); color:var(--gold);}
+.count{font:500 13px/1 var(--f-mono); color:var(--muted); min-width:64px; text-align:center; font-variant-numeric:tabular-nums;}
+.progress{position:fixed; left:0; top:0; height:2px; background:var(--gold); z-index:6; transition:width .6s ease; box-shadow:0 0 12px var(--gold);}
+.title-tag{position:fixed; top:calc(14px + env(safe-area-inset-top,0px)); left:16px; z-index:5; font:500 11px/1.3 var(--f-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--dim); pointer-events:none;}
+.notes{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:calc(70px + env(safe-area-inset-bottom,0px)); z-index:5;
+  width:min(680px, calc(100% - 32px)); box-sizing:border-box;
+  background:rgba(10,12,40,.92); border:1px solid rgba(185,162,255,.3); border-radius:14px;
+  padding:14px 18px; font-size:14px; line-height:1.55; color:var(--ink);
+}
+.notes .lbl{font:500 10px/1 var(--f-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;}
+.hint{position:fixed; top:calc(14px + env(safe-area-inset-top,0px)); right:16px; z-index:5; font:400 11px/1.4 var(--f-mono); color:var(--dim); text-align:right; transition:opacity .8s;}
+@media (max-width:560px){ .hint{display:none;} .btn .lbl{display:none;} }
+</style>
+
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="progress" id="progress"></div>
+<div class="title-tag">AMI · Career Galaxy</div>
+<div class="hint" id="hint">→ / space / tap: next<br>← back · O overview · N notes</div>
+
+<div id="viewport" aria-live="polite">
+  <div id="world">
+    <svg class="orbits" viewBox="-6000 -6000 12000 12000" aria-hidden="true">
+      <circle cx="0" cy="0" r="2360"/>
+      <circle cx="0" cy="0" r="2650"/>
+      <circle cx="0" cy="0" r="2780"/>
+      <circle cx="0" cy="0" r="3520"/>
+      <circle cx="0" cy="0" r="3570"/>
+      <circle class="edu" cx="-500" cy="2300" r="1350"/>
+    </svg>
+
+    <span class="formula" style="left:-1700px;top:-700px;font-size:120px;transform:rotate(-12deg)">∇f(x) = 0</span>
+    <span class="formula" style="left:1000px;top:-2350px;font-size:110px;transform:rotate(8deg)">∑ xᵢ / n</span>
+    <span class="formula" style="left:1300px;top:900px;font-size:140px;transform:rotate(-6deg)">∫ₐᵇ f(t) dt</span>
+    <span class="formula" style="left:-3300px;top:-2600px;font-size:100px;transform:rotate(10deg)">O(n log n)</span>
+    <span class="formula" style="left:-4300px;top:2200px;font-size:110px;transform:rotate(-14deg)">P(A|B)</span>
+    <span class="formula" style="left:2300px;top:3600px;font-size:120px;transform:rotate(9deg)">Ax = b</span>
+    <span class="formula" style="left:3200px;top:-2900px;font-size:90px;transform:rotate(-8deg)">dy/dx = ky</span>
+
+    <!-- 1 · Sun / title -->
+    <section class="planet sun" id="p-sun" style="left:0;top:0;--k:1.8">
+      <div class="in">
+        <div class="eyebrow">Applied Mathematics &amp; Informatics</div>
+        <h1>Life after the <em>diploma</em></h1>
+        <div class="sub">Career opportunities for AMI graduates, with a closer look at careers in education</div>
+        <div class="by">Aktilek · Ala-Too International University · 2026</div>
+      </div>
+    </section>
+
+    <!-- 10 · Core message hidden inside the sun -->
+    <section class="planet core" id="p-core" style="left:0;top:640px;--k:.17">
+      <div class="in">
+        <div class="eyebrow">The core idea</div>
+        <h2>Math teaches us how to think.</h2>
+        <p>Education lets one graduate teach thousands to do the same.</p>
+        <p style="font-family:var(--f-display);font-size:44px;color:#1b1306;margin-top:10px">Thank you · Questions?</p>
+      </div>
+    </section>
+
+    <!-- 2 · Toolkit -->
+    <section class="planet" id="p-toolkit" style="left:-2300px;top:-1300px;--k:1;--r:-8deg;--c:var(--violet)">
+      <div class="in">
+        <div class="eyebrow">What the degree gives you</div>
+        <h2>Math × code = a universal toolkit</h2>
+        <div class="trio">
+          <div><span class="sym">f(x)</span><b>Model</b><span>turn a real problem into equations</span></div>
+          <div><span class="sym">{ }</span><b>Build</b><span>turn equations into working software</span></div>
+          <div><span class="sym">→</span><b>Explain</b><span>turn results into clear decisions</span></div>
+        </div>
+        <p>That mix opens doors in tech, finance, science and classrooms.</p>
+      </div>
+    </section>
+
+    <!-- 3 · Industry in Kyrgyzstan -->
+    <section class="planet" id="p-industry" style="left:2400px;top:-1400px;--k:1.15;--r:6deg;--c:var(--cyan)">
+      <div class="in">
+        <div class="eyebrow">Path 1 · Industry in Kyrgyzstan</div>
+        <h2>The home IT market is booming</h2>
+        <div class="stats">
+          <div class="stat"><b>+50%</b><span>High Tech Park revenue growth in 2025</span></div>
+          <div class="stat"><b>95%</b><span>of that revenue comes from exports</span></div>
+          <div class="stat"><b>$1,302</b><span>average IT salary per month</span></div>
+        </div>
+        <div class="chips"><span class="chip">Backend dev</span><span class="chip">Data analyst</span><span class="chip">QA</span><span class="chip">DevOps</span></div>
+        <div class="src">Sources: HTP results 2025 (Akchabar, 24.kg); HTP salary study 2025</div>
+      </div>
+    </section>
+
+    <!-- 4 · Global -->
+    <section class="planet" id="p-global" style="left:3500px;top:150px;--k:.85;--r:-10deg;--c:var(--cyan)">
+      <div class="in">
+        <div class="eyebrow">Path 2 · The global market</div>
+        <h2>The world needs analysts</h2>
+        <div class="stats">
+          <div class="stat"><b>+34%</b><span>US data-scientist jobs, 2024–2034</span></div>
+          <div class="stat"><b>$112k</b><span>median yearly pay, 2024</span></div>
+        </div>
+        <p>Remote work lets a Bishkek graduate join teams in <strong>70 countries</strong> where HTP firms already sell.</p>
+        <div class="src">Source: US Bureau of Labor Statistics</div>
+      </div>
+    </section>
+
+    <!-- 5 · Education hub -->
+    <section class="planet edu" id="p-edu" style="left:-500px;top:2300px;--k:1.6">
+      <div class="in">
+        <div class="eyebrow">Path 3 · Education</div>
+        <h2>Where one mathematician multiplies</h2>
+        <p>A good math or CS teacher shapes <strong>hundreds of future engineers</strong>. For AMI graduates, education has three orbits:</p>
+        <div class="moons-hint"><span>School</span><span>University &amp; tutoring</span><span>EdTech</span></div>
+      </div>
+    </section>
+
+    <!-- 6 · School teacher -->
+    <section class="planet" id="p-teacher" style="left:-1769px;top:2762px;--k:.78;--r:-12deg;--c:var(--gold)">
+      <div class="in">
+        <div class="eyebrow">Orbit 1 · School</div>
+        <h2>Teachers are in demand</h2>
+        <div class="stats">
+          <div class="stat"><b>1,300+</b><span>teacher vacancies in Kyrgyz schools (Aug 2024)</span></div>
+          <div class="stat"><b>493</b><span>of them in Bishkek alone</span></div>
+        </div>
+        <p><strong>Math and computer science</strong> are among the hardest posts to fill. Starting pay is modest, so many teachers add tutoring.</p>
+        <div class="src">Source: Ministry of Education via 24.kg</div>
+      </div>
+    </section>
+
+    <!-- 7 · University & tutoring -->
+    <section class="planet" id="p-uni" style="left:-500px;top:3650px;--k:.78;--c:var(--gold)">
+      <div class="in">
+        <div class="eyebrow">Orbit 2 · University &amp; tutoring</div>
+        <h2>Teach, coach, research</h2>
+        <div class="chips">
+          <span class="chip">ORT exam prep</span><span class="chip">Olympiad coach</span><span class="chip">Online tutor</span><span class="chip">Lecturer (MSc / PhD)</span><span class="chip">Researcher</span>
+        </div>
+        <p>Tutoring can start <strong>in your second year</strong>. A master's degree opens the path to teaching at university.</p>
+      </div>
+    </section>
+
+    <!-- 8 · EdTech -->
+    <section class="planet" id="p-edtech" style="left:769px;top:2762px;--k:.78;--r:12deg;--c:var(--gold)">
+      <div class="in">
+        <div class="eyebrow">Orbit 3 · EdTech</div>
+        <h2>Teaching at scale</h2>
+        <div class="stats">
+          <div class="stat"><b>$280B</b><span>global EdTech market, 2025</span></div>
+          <div class="stat"><b>$760B</b><span>forecast for 2034</span></div>
+        </div>
+        <div class="chips"><span class="chip">Platform developer</span><span class="chip">Learning analyst</span><span class="chip">AI tutor builder</span></div>
+        <div class="src">Source: IMARC Group forecast</div>
+      </div>
+    </section>
+
+    <!-- 9 · Roadmap -->
+    <section class="planet" id="p-road" style="left:-3500px;top:700px;--k:1.05;--r:7deg;--c:var(--violet)">
+      <div class="in">
+        <div class="eyebrow">Your launch sequence</div>
+        <h2>From student to specialist</h2>
+        <ol class="steps">
+          <li><span class="n">1</span><div><b>Years 1–2</b><span>Master the math. Start tutoring.</span></div></li>
+          <li><span class="n">2</span><div><b>Year 3</b><span>Build a portfolio: GitHub, Kaggle, a teaching project.</span></div></li>
+          <li><span class="n">3</span><div><b>Year 4</b><span>Internship at an IT company or school practice.</span></div></li>
+          <li><span class="n">4</span><div><b>Graduation</b><span>Choose industry, education, or both.</span></div></li>
+        </ol>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="notes" id="notes" hidden>
+  <div class="lbl">Speaker notes</div>
+  <div id="notesText"></div>
+</div>
+
+<nav class="bar" aria-label="Presentation controls">
+  <button class="btn" id="prev" aria-label="Previous">←</button>
+  <span class="count" id="count">01 / 11</span>
+  <button class="btn" id="next" aria-label="Next">→</button>
+  <button class="btn" id="ovw" aria-label="Overview">◎<span class="lbl">Overview</span></button>
+  <button class="btn" id="nbtn" aria-pressed="false" aria-label="Speaker notes">✎<span class="lbl">Notes</span></button>
+  <button class="btn" id="fs" aria-label="Fullscreen">⛶</button>
+</nav>
+
+<script>
+(function(){
+  const world = document.getElementById('world');
+  const vp = document.getElementById('viewport');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function planetBox(id, pad){
+    const el = document.getElementById(id);
+    const cs = el.style;
+    const x = parseFloat(cs.left), y = parseFloat(cs.top);
+    const k = parseFloat(cs.getPropertyValue('--k')) || 1;
+    const r = parseFloat(cs.getPropertyValue('--r')) || 0;
+    const d = 1000 * k * (pad || 1.08);
+    return {x, y, w:d, h:d, r};
+  }
+
+  const stops = [
+    {box:{x:-50,y:1050,w:8600,h:6300,r:0}, note:"Open on the whole galaxy. Every planet is a career path for AMI graduates; the gold cluster below is education, today's focus. Ask the audience: who already knows what they'll do after graduation?"},
+    {id:'p-sun', note:"Introduce yourself and the topic. Applied Mathematics & Informatics sits in the middle because every path starts from the same skills."},
+    {id:'p-toolkit', note:"Our degree combines three abilities: modelling, programming and explaining. Very few degrees give all three, and this is why employers from many fields hire us."},
+    {id:'p-industry', note:"Kyrgyzstan's High Technology Park: 17.1 billion soms revenue in 2025, 50% more than 2024, almost all from exports. 463 companies, about 3,000 jobs. Average IT salary is about $1,300 a month; junior data analysts start near $690 and seniors earn over $3,100."},
+    {id:'p-global', note:"Globally, data science is one of the fastest-growing jobs: the US expects 34% growth by 2034, versus about 3% for all jobs. With remote work and English, we can compete for these roles from Bishkek."},
+    {id:'p-edu', note:"Now the main focus: education. One engineer builds one product; one teacher creates hundreds of engineers. There are three orbits: school, university and tutoring, and EdTech."},
+    {id:'p-teacher', note:"Schools lacked over 1,300 teachers in August 2024, 493 in Bishkek. Math, computer science and physics are among the hardest to fill, and the shift to 12-year schooling adds demand. Be honest: pay starts modest, so many combine school with tutoring."},
+    {id:'p-uni', note:"Tutoring for ORT and olympiads is something we can start right now, as students. Long term, a master's or PhD leads to university teaching and research."},
+    {id:'p-edtech', note:"EdTech joins both worlds: you write code, but the product teaches. The global market is about $280 billion and could reach $760 billion by 2034. Locally, the Ministry launched Okuu Kitebi, a digital textbook platform: a sign that schools are going digital."},
+    {id:'p-road', note:"A practical plan by year. Notice that steps 1 to 3 work for every path, so you don't have to choose too early."},
+    {id:'p-core', pad:1.12, note:"Zoom into the core. Close with the main idea, thank the audience and invite questions."}
+  ];
+  stops.forEach(s => { if(s.id) s.box = planetBox(s.id, s.pad); });
+
+  // camera: x,y world centre, s = screen px per world unit, r = degrees
+  let cam = {x:0,y:0,s:.1,r:0};
+  let idx = 0, anim = null;
+
+  function viewSize(){
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const barH = 70;
+    return {vw, vh, avail: vh - barH, cy: (vh - barH) / 2 + 6};
+  }
+  function fit(box){
+    const v = viewSize();
+    const s = Math.min(v.vw / box.w, v.avail / box.h);
+    return {x:box.x, y:box.y, s, r:box.r};
+  }
+  function apply(){
+    const v = viewSize();
+    world.style.transform = `translate(${v.vw/2}px, ${v.cy}px) rotate(${-cam.r}deg) scale(${cam.s}) translate(${-cam.x}px, ${-cam.y}px)`;
+    drawStars();
+  }
+  const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+
+  function flyTo(target, instant){
+    if(anim) cancelAnimationFrame(anim.raf);
+    if(instant || reduce){ cam = {...target}; apply(); return; }
+    const from = {...cam};
+    const v = viewSize();
+    const dist = Math.hypot(target.x-from.x, target.y-from.y) * Math.min(from.s, target.s);
+    const bump = Math.min(1.1, Math.log(1 + dist / v.vw) * .75);
+    let dr = target.r - from.r; if(dr > 180) dr -= 360; if(dr < -180) dr += 360;
+    const dur = 1100 + Math.min(900, bump * 700);
+    const l0 = Math.log(from.s), l1 = Math.log(target.s);
+    const t0 = performance.now();
+    anim = {};
+    const step = now => {
+      const t = Math.min(1, (now - t0) / dur), e = ease(t);
+      cam.x = from.x + (target.x - from.x) * e;
+      cam.y = from.y + (target.y - from.y) * e;
+      cam.r = from.r + dr * e;
+      cam.s = Math.exp(l0 + (l1 - l0) * e - bump * Math.sin(Math.PI * e));
+      apply();
+      if(t < 1) anim.raf = requestAnimationFrame(step); else anim = null;
+    };
+    anim.raf = requestAnimationFrame(step);
+  }
+
+  const countEl = document.getElementById('count');
+  const prog = document.getElementById('progress');
+  const notesEl = document.getElementById('notes');
+  const notesText = document.getElementById('notesText');
+  function go(i, instant){
+    idx = Math.max(0, Math.min(stops.length - 1, i));
+    flyTo(fit(stops[idx].box), instant);
+    countEl.textContent = String(idx+1).padStart(2,'0') + ' / ' + String(stops.length).padStart(2,'0');
+    prog.style.width = ((idx) / (stops.length - 1) * 100) + '%';
+    notesText.textContent = stops[idx].note;
+  }
+  const next = () => go(idx < stops.length - 1 ? idx + 1 : 0);
+  const prev = () => go(idx - 1);
+  const overview = () => go(0);
+
+  document.getElementById('next').onclick = next;
+  document.getElementById('prev').onclick = prev;
+  document.getElementById('ovw').onclick = overview;
+  const nbtn = document.getElementById('nbtn');
+  function toggleNotes(){ notesEl.hidden = !notesEl.hidden; nbtn.setAttribute('aria-pressed', String(!notesEl.hidden)); }
+  nbtn.onclick = toggleNotes;
+  document.getElementById('fs').onclick = () => {
+    try{
+      if(document.fullscreenElement) document.exitFullscreen();
+      else { const p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); if(p && p.catch) p.catch(()=>{}); }
+    }catch(e){}
+  };
+
+  const hint = document.getElementById('hint');
+  let hinted = false;
+  function hideHint(){ if(!hinted){ hinted = true; hint.style.opacity = 0; } }
+
+  document.addEventListener('keydown', e => {
+    if(e.target.closest && e.target.closest('button') && (e.key === ' ' || e.key === 'Enter')) return;
+    const k = e.key;
+    if(['ArrowRight','ArrowDown','PageDown',' '].includes(k)){ e.preventDefault(); next(); hideHint(); }
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(k)){ e.preventDefault(); prev(); hideHint(); }
+    else if(k === 'Home'){ go(0); }
+    else if(k === 'End'){ go(stops.length - 1); }
+    else if(k === 'o' || k === 'O'){ overview(); }
+    else if(k === 'n' || k === 'N'){ toggleNotes(); }
+    else if(k === 'f' || k === 'F'){ document.getElementById('fs').click(); }
+  });
+
+  // click / tap: a planet jumps to it, empty space goes forward; swipe left/right
+  let down = null;
+  vp.addEventListener('pointerdown', e => { down = {x:e.clientX, y:e.clientY, t:Date.now()}; });
+  vp.addEventListener('pointerup', e => {
+    if(!down) return;
+    const dx = e.clientX - down.x, dy = e.clientY - down.y;
+    const moved = Math.hypot(dx, dy);
+    down = null; hideHint();
+    if(moved > 40 && Math.abs(dx) > Math.abs(dy)){ dx < 0 ? next() : prev(); return; }
+    if(moved > 12) return;
+    const p = e.target.closest && e.target.closest('.planet');
+    if(p){
+      const i = stops.findIndex(s => s.id === p.id);
+      if(i >= 0 && i !== idx){ go(i); return; }
+    }
+    next();
+  });
+
+  // starfield with gentle parallax tied to the camera
+  const cv = document.getElementById('stars');
+  const ctx = cv.getContext('2d');
+  let stars = [], W = 0, H = 0, dpr = 1;
+  function seed(){
+    stars = [];
+    let n = 520, rnd = 7;
+    const rand = () => (rnd = (rnd * 16807) % 2147483647) / 2147483647;
+    for(let i=0;i<n;i++){
+      const layer = rand() < .6 ? .25 : rand() < .7 ? .6 : 1;
+      stars.push({x:rand(), y:rand(), d:layer, r:.4 + rand()*1.1*layer, a:.35 + rand()*.6, tw:rand()*6.28,
+        hue: rand() < .12 ? 'g' : rand() < .2 ? 'c' : 'w'});
+    }
+  }
+  function resize(){
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    go(idx, true);
+  }
+  let tick = 0;
+  function drawStars(){
+    ctx.clearRect(0,0,W,H);
+    const zoom = Math.log(cam.s / .1);
+    for(const s of stars){
+      const par = .035 * s.d;
+      let x = (s.x * W - cam.x * par * 3) % W; if(x < 0) x += W;
+      let y = (s.y * H - cam.y * par * 3) % H; if(y < 0) y += H;
+      const cx = W/2, cy = H/2;
+      const zf = 1 + Math.max(-.4, Math.min(1.2, zoom * .12 * s.d));
+      x = cx + (x - cx) * zf; y = cy + (y - cy) * zf;
+      const tw = reduce ? 1 : .75 + .25 * Math.sin(tick * .002 + s.tw);
+      ctx.globalAlpha = s.a * tw;
+      ctx.fillStyle = s.hue === 'g' ? '#F7C873' : s.hue === 'c' ? '#9BE2FF' : '#E8EAFF';
+      ctx.beginPath(); ctx.arc(x, y, s.r * (0.8 + .4 * s.d), 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function twinkle(now){ tick = now; if(!anim) drawStars(); requestAnimationFrame(twinkle); }
+
+  seed();
+  window.addEventListener('resize', resize);
+  resize();
+  if(!reduce) requestAnimationFrame(twinkle);
+})();
+</script>
+
+</body></html>
